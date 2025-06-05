@@ -26,6 +26,7 @@ func main() {
 			if len(words) == 0 {
 				continue
 			}
+
 			cmd := words[0]
 			command, exists := commands[cmd]
 
@@ -33,9 +34,10 @@ func main() {
 				fmt.Println("Unknown command")
 				continue
 			}
+
 			err := command.callback()
 			if err != nil {
-				fmt.Println("Error executing command: ", err)
+				fmt.Println("command error: ", err)
 			}
 		}
 	}

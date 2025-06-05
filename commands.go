@@ -1,15 +1,29 @@
 package main
 
+// excuse all the comments, my linter seems to believe they are required
+// due to the capitalized names of the Command struct and I wanted to get
+// rid of the warning flags
+
 import (
 	"fmt"
 	"os"
 )
 
-// Command is the basic commmand struct
+// Command is... the commmand struct
 type Command struct {
 	name     string
 	desc     string
 	callback func() error
+}
+
+type config struct {
+	nextURL string
+	prevURL string
+}
+
+var cfg config = config{
+	"ding",
+	"dong",
 }
 
 // getCommands returns a map of commands
@@ -27,12 +41,12 @@ func getCommands() map[string]Command {
 		},
 		"map": {
 			name:     "map",
-			desc:     "Displays twenty Pokemon locations at a time, advancing with each call",
+			desc:     "Displays twenty locations at a time, advancing with each call",
 			callback: cmdMap,
 		},
 		"mapb": {
 			name:     "mapb",
-			desc:     "Displays the previous twenty Pokemon locations",
+			desc:     "Displays the previous twenty locations",
 			callback: cmdMapBack,
 		},
 	}
