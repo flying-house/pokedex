@@ -7,10 +7,6 @@ import (
 	"strings"
 )
 
-const (
-	apiURL = "https://pokeapi.co/api/v2/pokemon"
-)
-
 func main() {
 	commands := getCommands()
 	scanner := bufio.NewScanner(os.Stdin)

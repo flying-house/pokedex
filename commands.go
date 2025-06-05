@@ -34,7 +34,7 @@ type LocationResponse struct {
 }
 
 var cfg config = config{
-	nextURL: "https://pokeapi.co/api/v2/location/",
+	nextURL: "https://pokeapi.co/api/v2/location-area/",
 	prevURL: "",
 }
 
