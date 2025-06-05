@@ -5,14 +5,14 @@ import (
 	"os"
 )
 
-// Command is a basic struct for definitions
+// Command is the basic commmand struct
 type Command struct {
 	name     string
 	desc     string
 	callback func() error
 }
 
-// getCommands returns a map of commands with their name, description, and callback function
+// getCommands returns a map of commands
 func getCommands() map[string]Command {
 	return map[string]Command{
 		"help": {
@@ -24,6 +24,16 @@ func getCommands() map[string]Command {
 			name:     "exit",
 			desc:     "Exit the Pokedex",
 			callback: cmdExit,
+		},
+		"map": {
+			name:     "map",
+			desc:     "Displays twenty Pokemon locations at a time, advancing with each call",
+			callback: cmdMap,
+		},
+		"mapb": {
+			name:     "mapb",
+			desc:     "Displays the previous twenty Pokemon locations",
+			callback: cmdMapBack,
 		},
 	}
 }
@@ -43,5 +53,15 @@ func cmdHelp() error {
 	for _, cmd := range getCommands() {
 		fmt.Printf("%s: %s\n", cmd.name, cmd.desc)
 	}
+	return nil
+}
+
+func cmdMap() error {
+	fmt.Println("Map not implemented yet")
+	return nil
+}
+
+func cmdMapBack() error {
+	fmt.Println("Back map not implemented yet")
 	return nil
 }
