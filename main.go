@@ -37,6 +37,8 @@ func main() {
 				continue
 			}
 
+			// why am I using a callback? why do some functions get called
+			// directly and these do not? what the hell is even this
 			err := command.callback()
 			if err != nil {
 				fmt.Println("command error: ", err)
