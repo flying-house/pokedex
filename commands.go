@@ -1,8 +1,8 @@
 package main
 
-// excuse all the comments, my linter seems to believe they are required
+// excuse all the comments, my linter(?) seems to believe they are required
 // due to the capitalized names of the Command struct and I wanted to get
-// rid of the warning flags
+// rid of the warning flags but assumed I needed the capitals??? really no idea
 
 import (
 	"fmt"

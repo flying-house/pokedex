@@ -10,6 +10,8 @@ import (
 	"strings"
 )
 
+// is this where the URL goes? is this an "endpoint" or is there something else?
+// are "startpoints" a thing? what does this URL do? what do I do with it?
 const (
 	apiURL = "https://pokeapi.co/api/v2/pokemon"
 )
@@ -61,7 +63,7 @@ func getMapLocations() ([]string, error) {
 		return nil, err
 	}
 
-	return nil, nil
+	return nil, nil //who fuckin knows how to return this thing, it's a map
 
 }
 
