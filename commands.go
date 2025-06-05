@@ -1,19 +1,17 @@
 package main
 
-// excuse all the comments, my linter(?) seems to believe they are required
-// due to the capitalized names of the Command struct and I wanted to get
-// rid of the warning flags but assumed I needed the capitals??? really no idea
-
 import (
+	"encoding/json"
 	"fmt"
+	"io"
+	"net/http"
 	"os"
 )
 
-// Command is... the commmand struct
-type Command struct {
+type command struct {
 	name     string
 	desc     string
-	callback func() error
+	callback func(*config) error
 }
 
 type config struct {
@@ -21,14 +19,27 @@ type config struct {
 	prevURL string
 }
 
-var cfg config = config{
-	"ding",
-	"dong",
+// LocationArea comment for linter
+type LocationArea struct {
+	Name string `json:"name"`
+	URL  string `json:"url"`
 }
 
-// getCommands returns a map of commands
-func getCommands() map[string]Command {
-	return map[string]Command{
+// LocationResponse comment for linter
+type LocationResponse struct {
+	Count    int            `json:"count"`
+	Next     *string        `json:"next"`
+	Previous *string        `json:"previous"`
+	Results  []LocationArea `json:"results"`
+}
+
+var cfg config = config{
+	nextURL: "https://pokeapi.co/api/v2/location/",
+	prevURL: "",
+}
+
+func getCommands() map[string]command {
+	return map[string]command{
 		"help": {
 			name:     "help",
 			desc:     "Displays a help message",
@@ -52,15 +63,34 @@ func getCommands() map[string]Command {
 	}
 }
 
-// cmdExit exits the Pokedex
-func cmdExit() error {
+func getLocations(url string) (*LocationResponse, error) {
+	response, err := http.Get(url)
+	if err != nil {
+		return nil, err
+	}
+	defer response.Body.Close()
+
+	body, err := io.ReadAll(response.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	var locationResponse LocationResponse
+	err = json.Unmarshal(body, &locationResponse)
+	if err != nil {
+		return nil, err
+	}
+
+	return &locationResponse, nil
+}
+
+func cmdExit(cfg *config) error {
 	fmt.Println("Closing the Pokedex... Goodbye!")
 	os.Exit(0)
 	return nil
 }
 
-// cmdHelp displays a help message
-func cmdHelp() error {
+func cmdHelp(cfg *config) error {
 	fmt.Println("Welcome to the Pokedex!")
 	fmt.Printf("Usage:\n\n")
 
@@ -70,12 +100,62 @@ func cmdHelp() error {
 	return nil
 }
 
-func cmdMap() error {
-	fmt.Println("Map not implemented yet")
+func cmdMap(cfg *config) error {
+	if cfg.nextURL == "" {
+		fmt.Println("No more locations to display")
+		return nil
+	}
+
+	locations, err := getLocations(cfg.nextURL)
+	if err != nil {
+		return err
+	}
+
+	for _, location := range locations.Results {
+		fmt.Println(location.Name)
+	}
+
+	if locations.Next != nil {
+		cfg.nextURL = *locations.Next
+	} else {
+		cfg.nextURL = ""
+	}
+
+	if locations.Previous != nil {
+		cfg.prevURL = *locations.Previous
+	} else {
+		cfg.prevURL = ""
+	}
+
 	return nil
 }
 
-func cmdMapBack() error {
-	fmt.Println("Back map not implemented yet")
+func cmdMapBack(cfg *config) error {
+	if cfg.prevURL == "" {
+		fmt.Println("you're on the first page")
+		return nil
+	}
+
+	locations, err := getLocations(cfg.prevURL)
+	if err != nil {
+		return err
+	}
+
+	for _, location := range locations.Results {
+		fmt.Println(location.Name)
+	}
+
+	if locations.Next != nil {
+		cfg.nextURL = *locations.Next
+	} else {
+		cfg.nextURL = ""
+	}
+
+	if locations.Previous != nil {
+		cfg.prevURL = *locations.Previous
+	} else {
+		cfg.prevURL = ""
+	}
+
 	return nil
 }
