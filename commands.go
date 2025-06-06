@@ -1,41 +1,28 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
-	"io"
-	"net/http"
 	"os"
+
+	"github.com/flying-house/pokedex/internal/pokeapi"
 )
 
 type command struct {
 	name     string
 	desc     string
-	callback func(*config) error
+	callback func(*config, []string) error
 }
 
 type config struct {
-	nextURL string
-	prevURL string
-}
-
-// LocationArea comment for linter
-type LocationArea struct {
-	Name string `json:"name"`
-	URL  string `json:"url"`
-}
-
-// LocationResponse comment for linter
-type LocationResponse struct {
-	Count    int            `json:"count"`
-	Next     *string        `json:"next"`
-	Previous *string        `json:"previous"`
-	Results  []LocationArea `json:"results"`
+	nextURL   string
+	prevURL   string
+	apiClient *pokeapi.Client
 }
 
 var cfg config = config{
-	nextURL: "https://pokeapi.co/api/v2/location-area/",
-	prevURL: "",
+	nextURL:   "https://pokeapi.co/api/v2/location-area/",
+	prevURL:   "",
+	apiClient: pokeapi.NewClient(),
 }
 
 func getCommands() map[string]command {
@@ -60,37 +47,21 @@ func getCommands() map[string]command {
 			desc:     "Displays the previous twenty locations",
 			callback: cmdMapBack,
 		},
+		"explore": {
+			name:     "explore",
+			desc:     "Explore a location area and see its Pokemon",
+			callback: cmdExplore,
+		},
 	}
 }
 
-func getLocations(url string) (*LocationResponse, error) {
-	response, err := http.Get(url)
-	if err != nil {
-		return nil, err
-	}
-	defer response.Body.Close()
-
-	body, err := io.ReadAll(response.Body)
-	if err != nil {
-		return nil, err
-	}
-
-	var locationResponse LocationResponse
-	err = json.Unmarshal(body, &locationResponse)
-	if err != nil {
-		return nil, err
-	}
-
-	return &locationResponse, nil
-}
-
-func cmdExit(cfg *config) error {
+func cmdExit(cfg *config, args []string) error {
 	fmt.Println("Closing the Pokedex... Goodbye!")
 	os.Exit(0)
 	return nil
 }
 
-func cmdHelp(cfg *config) error {
+func cmdHelp(cfg *config, args []string) error {
 	fmt.Println("Welcome to the Pokedex!")
 	fmt.Printf("Usage:\n\n")
 
@@ -100,13 +71,13 @@ func cmdHelp(cfg *config) error {
 	return nil
 }
 
-func cmdMap(cfg *config) error {
+func cmdMap(cfg *config, args []string) error {
 	if cfg.nextURL == "" {
 		fmt.Println("No more locations to display")
 		return nil
 	}
 
-	locations, err := getLocations(cfg.nextURL)
+	locations, err := cfg.apiClient.GetLocationAreas(cfg.nextURL)
 	if err != nil {
 		return err
 	}
@@ -130,13 +101,13 @@ func cmdMap(cfg *config) error {
 	return nil
 }
 
-func cmdMapBack(cfg *config) error {
+func cmdMapBack(cfg *config, args []string) error {
 	if cfg.prevURL == "" {
 		fmt.Println("you're on the first page")
 		return nil
 	}
 
-	locations, err := getLocations(cfg.prevURL)
+	locations, err := cfg.apiClient.GetLocationAreas(cfg.prevURL)
 	if err != nil {
 		return err
 	}
@@ -155,6 +126,29 @@ func cmdMapBack(cfg *config) error {
 		cfg.prevURL = *locations.Previous
 	} else {
 		cfg.prevURL = ""
+	}
+
+	return nil
+}
+
+func cmdExplore(cfg *config, args []string) error {
+	if len(args) == 0 {
+		fmt.Println("Please specify a location, e.g.:")
+		fmt.Println("  explore pastoria-city-area")
+		return nil
+	}
+
+	locationName := args[0]
+	fmt.Printf("Exploring %s...\n", locationName)
+
+	locationDetail, err := cfg.apiClient.GetLocationAreaDetail(locationName)
+	if err != nil {
+		return err
+	}
+
+	fmt.Println("Found Pokemon:")
+	for _, encounter := range locationDetail.PokemonEncounters {
+		fmt.Printf(" - %s\n", encounter.Pokemon.Name)
 	}
 
 	return nil
